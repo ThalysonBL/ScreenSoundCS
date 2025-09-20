@@ -1,44 +1,44 @@
 ﻿namespace ScreenSound.Modelos;
-internal class Banda: IAvaliavel
+internal class Band: IRateable
 {
-    private List<Album> albuns = new List<Album>();
-    private List<Avaliacao> notas = new();
+    private List<Album> albums = new List<Album>();
+    private List<Rating> ratings = new();
 
-    public Banda(string nome)
+    public Band(string name)
     {
-        Nome = nome;
+        Name = name;
     }
 
-    public string Nome { get; }
-    public double Media
+    public string Name { get; }
+    public double Average
     {
         get
         {
-            if (notas.Count == 0) return 0;
+            if (ratings.Count == 0) return 0;
             else
             {
-                return notas.Average(a => a.Nota);
+                return ratings.Average(a => a.Score);
             }
         }
     }
-    public List<Album> Albuns => albuns;
+    public List<Album> Albums => albums;
 
-    public void AdicionarAlbum(Album album)
+    public void AddAlbum(Album album)
     {
-        albuns.Add(album);
+        albums.Add(album);
     }
 
-    public void AdicionarNota(Avaliacao nota)
+    public void AddRating(Rating rating)
     {
-        notas.Add(nota);
+        ratings.Add(rating);
     }
 
-    public void ExibirDiscografia()
+    public void ShowDiscography()
     {
-        Console.WriteLine($"Discografia da banda {Nome}");
-        foreach (Album album in albuns)
+        Console.WriteLine($"Discografia da banda {Name}");
+        foreach (Album album in albums)
         {
-            Console.WriteLine($"Álbum: {album.Nome} ({album.DuracaoTotal})");
+            Console.WriteLine($"Álbum: {album.Name} ({album.TotalDuration})");
         }
     }
 }

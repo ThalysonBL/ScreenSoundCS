@@ -1,23 +1,23 @@
 ﻿namespace ScreenSound.Modelos;
 
-internal class Avaliacao
+internal class Rating
 {
-    public Avaliacao(int nota)
+    public Rating(int score)
     {
-        if (nota <= 0) nota = 0;
-        if (nota >= 10) nota = 10;
-        Nota = nota;
+        if (score <= 0) score = 0;
+        if (score >= 10) score = 10;
+        Score = score;
     }
-    public int Nota { get; }
+    public int Score { get; }
 
-    public static Avaliacao Parse(string texto)
+    public static Rating Parse(string text)
     {
-        int nota = int.Parse(texto);
-        return new Avaliacao(nota);
+        int score = int.Parse(text);
+        return new Rating(score);
     }
 
-    public int GetNota()
+    public int GetScore()
     {
-        return Nota;
+        return Score;
     }
 }

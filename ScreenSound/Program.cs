@@ -1,24 +1,24 @@
 ﻿using ScreenSound.Menus;
 using ScreenSound.Modelos;
 
-Banda beatles = new("the Beatles");
-beatles.AdicionarNota(new Avaliacao(10));
-beatles.AdicionarNota(new Avaliacao(8));
-beatles.AdicionarNota(new Avaliacao(6));
+Band beatles = new("the Beatles");
+beatles.AddRating(new Rating(10));
+beatles.AddRating(new Rating(8));
+beatles.AddRating(new Rating(6));
 
-Dictionary<string, Banda> bandasRegistradas = new();
-bandasRegistradas.Add(beatles.Nome, beatles);
+Dictionary<string, Band> registeredBands = new();
+registeredBands.Add(beatles.Name, beatles);
 
 Dictionary<int, Menu> opcoes = new();
-opcoes.Add(1, new MenuRegistrarBanda());
-opcoes.Add(2, new MenuRegistrarAlbum());
-opcoes.Add(3, new MenuMostrarBandasRegistradas());
-opcoes.Add(4, new MenuAvaliarBanda());
-opcoes.Add(5, new MenuAvaliarAlbum());
-opcoes.Add(6, new MenuExibirDetalhes());
-opcoes.Add(-1, new MenuSair());
+opcoes.Add(1, new MenuRegisterBand());
+opcoes.Add(2, new MenuRegisterAlbum());
+opcoes.Add(3, new MenuShowRegisteredBands());
+opcoes.Add(4, new MenuRateBand());
+opcoes.Add(5, new MenuRateAlbum());
+opcoes.Add(6, new MenuShowDetails());
+opcoes.Add(-1, new MenuExit());
 
-void ExibirLogo()
+void ShowLogo()
 {
     Console.WriteLine(@"
 
@@ -31,9 +31,9 @@ void ExibirLogo()
 ");
     Console.WriteLine("Boas vindas ao Screen Sound 2.0!");
 }
-void ExibirOpcoesDoMenu()
+void ShowMenuOptions()
 {
-    ExibirLogo();
+    ShowLogo();
     Console.WriteLine("\nDigite 1 para registrar uma banda");
     Console.WriteLine("Digite 2 para registrar o álbum de uma banda");
     Console.WriteLine("Digite 3 para mostrar todas as bandas");
@@ -48,11 +48,11 @@ void ExibirOpcoesDoMenu()
 
     if (opcoes.ContainsKey(opcaoEscolhidaNumerica))
     {
-        Menu menuASerExibido = opcoes[opcaoEscolhidaNumerica];
-        menuASerExibido.Executar(bandasRegistradas);
+        Menu menuToShow = opcoes[opcaoEscolhidaNumerica];
+        menuToShow.Execute(registeredBands);
         if (opcaoEscolhidaNumerica > 0 )
         {
-            ExibirOpcoesDoMenu();
+            ShowMenuOptions();
         }
     }
     else
@@ -62,4 +62,4 @@ void ExibirOpcoesDoMenu()
 
 }
 
-ExibirOpcoesDoMenu();
+ShowMenuOptions();

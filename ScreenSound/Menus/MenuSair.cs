@@ -2,9 +2,9 @@
 
 namespace ScreenSound.Menus;
 
-internal class MenuSair: Menu
+internal class MenuExit: Menu
 {
-    public override void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public override void Execute(Dictionary<string, Band> registeredBands)
     {
         Console.WriteLine("Tchau tchau :)");
         return;

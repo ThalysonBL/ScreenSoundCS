@@ -2,27 +2,27 @@
 
 namespace ScreenSound.Menus;
 
-internal class MenuAvaliarBanda : Menu
+internal class MenuRateBand : Menu
 {
-    public override void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public override void Execute(Dictionary<string, Band> registeredBands)
     {
-        base.Executar(bandasRegistradas);
-        ExibirTituloDaOpcao("Avaliar banda");
+        base.Execute(registeredBands);
+        ShowOptionTitle("Avaliar banda");
         Console.Write("Digite o nome da banda que deseja avaliar: ");
-        string nomeDaBanda = Console.ReadLine()!;
-        if (bandasRegistradas.ContainsKey(nomeDaBanda))
+        string bandName = Console.ReadLine()!;
+        if (registeredBands.ContainsKey(bandName))
         {
-            Banda banda = bandasRegistradas[nomeDaBanda];
-            Console.Write($"Qual a nota que a banda {nomeDaBanda} merece: ");
-            Avaliacao nota = Avaliacao.Parse(Console.ReadLine()!);
-            banda.AdicionarNota(nota);
-            Console.WriteLine($"\nA nota {nota.Nota} foi registrada com sucesso para a banda {nomeDaBanda}");
+            Band band = registeredBands[bandName];
+            Console.Write($"Qual a nota que a banda {bandName} merece: ");
+            Rating rating = Rating.Parse(Console.ReadLine()!);
+            band.AddRating(rating);
+            Console.WriteLine($"\nA nota {rating.Score} foi registrada com sucesso para a banda {bandName}");
             Thread.Sleep(2000);
             Console.Clear();
         }
         else
         {
-            Console.WriteLine($"\nA banda {nomeDaBanda} não foi encontrada!");
+            Console.WriteLine($"\nA banda {bandName} não foi encontrada!");
             Console.WriteLine("Digite uma tecla para voltar ao menu principal");
             Console.ReadKey();
             Console.Clear();

@@ -1,8 +1,8 @@
 ﻿namespace ScreenSound.Modelos;
 
-internal interface IAvaliavel
+internal interface IRateable
 {
-    void AdicionarNota(Avaliacao nota);
+    void AddRating(Rating rating);
 
-    double Media { get; }
+    double Average { get; }
 }

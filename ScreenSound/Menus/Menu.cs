@@ -4,16 +4,16 @@ namespace ScreenSound.Menus;
 
 internal class Menu
 {
-    public void ExibirTituloDaOpcao(string titulo)
+    public void ShowOptionTitle(string title)
     {
-        int quantidadeDeLetras = titulo.Length;
-        string asteriscos = string.Empty.PadLeft(quantidadeDeLetras, '*');
-        Console.WriteLine(asteriscos);
-        Console.WriteLine(titulo);
-        Console.WriteLine(asteriscos + "\n");
+        int letterCount = title.Length;
+        string asterisks = string.Empty.PadLeft(letterCount, '*');
+        Console.WriteLine(asterisks);
+        Console.WriteLine(title);
+        Console.WriteLine(asterisks + "\n");
     }
 
-    public virtual void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public virtual void Execute(Dictionary<string, Band> registeredBands)
     {
         Console.Clear();
 

@@ -3,25 +3,25 @@ using ScreenSound.Modelos;
 
 namespace ScreenSound.Menus;
 
-internal class MenuExibirDetalhes: Menu
+internal class MenuShowDetails: Menu
 {
 
-    public override void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public override void Execute(Dictionary<string, Band> registeredBands)
     {
-        base.Executar(bandasRegistradas);
-        ExibirTituloDaOpcao("Exibir detalhes da banda");
+        base.Execute(registeredBands);
+        ShowOptionTitle("Exibir detalhes da banda");
         Console.Write("Digite o nome da banda que deseja conhecer melhor: ");
-        string nomeDaBanda = Console.ReadLine()!;
-        if (bandasRegistradas.ContainsKey(nomeDaBanda))
+        string bandName = Console.ReadLine()!;
+        if (registeredBands.ContainsKey(bandName))
         {
-            Banda banda = bandasRegistradas[nomeDaBanda];
+            Band band = registeredBands[bandName];
 
-            Console.WriteLine($"\nA média da banda {nomeDaBanda} é {banda.Media}.");
+            Console.WriteLine($"\nA média da banda {bandName} é {band.Average}.");
 
             Console.WriteLine("\n Discografia:");
-            foreach(Album album in banda.Albuns)
+            foreach(Album album in band.Albums)
             {
-                Console.WriteLine($"{album.Nome} -> {album.Media}");
+                Console.WriteLine($"{album.Name} -> {album.Average}");
             }
             Console.WriteLine("\nDigite uma tecla para voltar ao menu principal");
             Console.ReadKey();
@@ -30,7 +30,7 @@ internal class MenuExibirDetalhes: Menu
         }
         else
         {
-            Console.WriteLine($"\nA banda {nomeDaBanda} não foi encontrada!");
+            Console.WriteLine($"\nA banda {bandName} não foi encontrada!");
             Console.WriteLine("Digite uma tecla para voltar ao menu principal");
             Console.ReadKey();
             Console.Clear();

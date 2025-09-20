@@ -1,25 +1,25 @@
 ﻿namespace ScreenSound.Modelos;
 
-internal class Musica
+internal class Music
 {
-    public Musica(Banda artista, string nome)
+    public Music(Band artist, string name)
     {
-        Artista = artista;
-        Nome = nome;
+        Artist = artist;
+        Name = name;
     }
 
-    public string Nome { get; }
-    public Banda Artista { get; }
-    public int Duracao { get; set; }
-    public bool Disponivel { get; set; }
-    public string DescricaoResumida => $"A música {Nome} pertence à banda {Artista}";
+    public string Name { get; }
+    public Band Artist { get; }
+    public int Duration { get; set; }
+    public bool Available { get; set; }
+    public string BriefDescription => $"A música {Name} pertence à banda {Artist}";
 
-    public void ExibirFichaTecnica()
+    public void ShowTechnicalSheet()
     {
-        Console.WriteLine($"Nome: {Nome}");
-        Console.WriteLine($"Artista: {Artista.Nome}");
-        Console.WriteLine($"Duração: {Duracao}");
-        if (Disponivel)
+        Console.WriteLine($"Nome: {Name}");
+        Console.WriteLine($"Artista: {Artist.Name}");
+        Console.WriteLine($"Duração: {Duration}");
+        if (Available)
         {
             Console.WriteLine("Disponível no plano.");
         } else

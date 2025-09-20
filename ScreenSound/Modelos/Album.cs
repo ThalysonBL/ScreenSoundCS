@@ -2,46 +2,46 @@
 
 namespace ScreenSound.Modelos;
 
-internal class Album: IAvaliavel
+internal class Album: IRateable
 {
-    private List<Musica> musicas = new List<Musica>();
-    private List<Avaliacao> notas = new();
+    private List<Music> musics = new List<Music>();
+    private List<Rating> ratings = new();
 
-    public Album(string nome)
+    public Album(string name)
     {
-        Nome = nome;
+        Name = name;
     }
 
-    public string Nome { get; }
-    public int DuracaoTotal => musicas.Sum(a => a.Duracao);
-    public List<Musica> Musicas => musicas;
+    public string Name { get; }
+    public int TotalDuration => musics.Sum(a => a.Duration);
+    public List<Music> Musics => musics;
 
-    public double Media
+    public double Average
     {
         get
         {
-            if (notas.Count == 0) return 0;
-            return notas.Average(a => a.Nota);
+            if (ratings.Count == 0) return 0;
+            return ratings.Average(a => a.Score);
         }
     }
 
-    public void AdicionarMusica(Musica musica)
+    public void AddMusic(Music music)
     {
-        musicas.Add(musica);
+        musics.Add(music);
     }
 
-    public void AdicionarNota(Avaliacao nota)
+    public void AddRating(Rating rating)
     {
-        notas.Add(nota);
+        ratings.Add(rating);
     }
 
-    public void ExibirMusicasDoAlbum()
+    public void ShowAlbumMusics()
     {
-        Console.WriteLine($"Lista de músicas do álbum {Nome}:\n");
-        foreach (var musica in musicas)
+        Console.WriteLine($"Lista de músicas do álbum {Name}:\n");
+        foreach (var music in musics)
         {
-            Console.WriteLine($"Música: {musica.Nome}");
+            Console.WriteLine($"Música: {music.Name}");
         }
-        Console.WriteLine($"\nPara ouvir este álbum inteiro você precisa de {DuracaoTotal}");
+        Console.WriteLine($"\nPara ouvir este álbum inteiro você precisa de {TotalDuration}");
     }
 }

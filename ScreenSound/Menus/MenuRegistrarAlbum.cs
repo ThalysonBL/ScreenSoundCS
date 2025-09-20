@@ -2,32 +2,32 @@
 
 namespace ScreenSound.Menus;
 
-internal class MenuRegistrarAlbum: Menu
+internal class MenuRegisterAlbum: Menu
 {
-    public override void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public override void Execute(Dictionary<string, Band> registeredBands)
     {
-        base.Executar(bandasRegistradas);
+        base.Execute(registeredBands);
         Menu menu = new();
-        menu.ExibirTituloDaOpcao("Registro de álbuns");
+        menu.ShowOptionTitle("Registro de álbuns");
         Console.Write("Digite a banda cujo álbum deseja registrar: ");
-        string nomeDaBanda = Console.ReadLine()!;
-        if (bandasRegistradas.ContainsKey(nomeDaBanda))
+        string bandName = Console.ReadLine()!;
+        if (registeredBands.ContainsKey(bandName))
         {
 
             Console.Write("Agora digite o título do álbum: ");
-            string tituloAlbum = Console.ReadLine()!;
+            string albumTitle = Console.ReadLine()!;
 
-            Banda banda = bandasRegistradas[nomeDaBanda];
+            Band band = registeredBands[bandName];
 
-            banda.AdicionarAlbum(new Album(tituloAlbum));
+            band.AddAlbum(new Album(albumTitle));
 
-            Console.WriteLine($"O álbum {tituloAlbum} de {nomeDaBanda} foi registrado com sucesso!");
+            Console.WriteLine($"O álbum {albumTitle} de {bandName} foi registrado com sucesso!");
             Thread.Sleep(4000);
             Console.Clear();
         }
         else
         {
-            Console.WriteLine($"\nA banda {nomeDaBanda} não foi encontrada!");
+            Console.WriteLine($"\nA banda {bandName} não foi encontrada!");
             Console.WriteLine("Digite uma tecla para voltar ao menu principal");
             Console.ReadKey();
             Console.Clear();

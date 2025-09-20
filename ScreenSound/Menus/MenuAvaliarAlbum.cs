@@ -2,34 +2,34 @@
 
 namespace ScreenSound.Menus;
 
-internal class MenuAvaliarAlbum: Menu
+internal class MenuRateAlbum: Menu
 {
-    public override void Executar(Dictionary<string, Banda> bandasRegistradas)
+    public override void Execute(Dictionary<string, Band> registeredBands)
     {
-        base.Executar(bandasRegistradas);
-        ExibirTituloDaOpcao("Avaliar Album");
+        base.Execute(registeredBands);
+        ShowOptionTitle("Avaliar Album");
         Console.Write("Digite o nome da banda que deseja avaliar: ");
-        string nomeDaBanda = Console.ReadLine()!;
-        if (bandasRegistradas.ContainsKey(nomeDaBanda))
+        string bandName = Console.ReadLine()!;
+        if (registeredBands.ContainsKey(bandName))
         {
-            Banda banda = bandasRegistradas[nomeDaBanda];
+            Band band = registeredBands[bandName];
 
             Console.Write("Agora digite o titulo do album: ");
-            string tituloAlbum = Console.ReadLine()!;
+            string albumTitle = Console.ReadLine()!;
 
-            if (banda.Albuns.Any(a => a.Nome.Equals(tituloAlbum)))
+            if (band.Albums.Any(a => a.Name.Equals(albumTitle)))
             {
-                Album album = banda.Albuns.First(a => a.Nome.Equals(tituloAlbum));
-                Console.Write($"Qual a nota que o álbum {tituloAlbum} merece: ");
-                Avaliacao nota = Avaliacao.Parse(Console.ReadLine()!);
-                album.AdicionarNota(nota);
-                Console.WriteLine($"\nA nota {nota.Nota} foi registrada com sucesso para o álbum {tituloAlbum} da banda {nomeDaBanda}");
+                Album album = band.Albums.First(a => a.Name.Equals(albumTitle));
+                Console.Write($"Qual a nota que o álbum {albumTitle} merece: ");
+                Rating rating = Rating.Parse(Console.ReadLine()!);
+                album.AddRating(rating);
+                Console.WriteLine($"\nA nota {rating.Score} foi registrada com sucesso para o álbum {albumTitle} da banda {bandName}");
                 Thread.Sleep(2000);
                 Console.Clear();
             }
             else
             {
-                Console.WriteLine($"\nO álbum {tituloAlbum} não foi encontrada!");
+                Console.WriteLine($"\nO álbum {albumTitle} não foi encontrada!");
                 Console.WriteLine("Digite uma tecla para voltar ao menu principal");
                 Console.ReadKey();
                 Console.Clear();
@@ -37,7 +37,7 @@ internal class MenuAvaliarAlbum: Menu
         }
         else
         {
-            Console.WriteLine($"\nA banda {nomeDaBanda} não foi encontrada!");
+            Console.WriteLine($"\nA banda {bandName} não foi encontrada!");
             Console.WriteLine("Digite uma tecla para voltar ao menu principal");
             Console.ReadKey();
             Console.Clear();
