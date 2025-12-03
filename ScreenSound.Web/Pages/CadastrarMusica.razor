@@ -1,0 +1,224 @@
+﻿@page "/CadastrarMusica"
+@using ScreenSound.Web.Requests
+@using Microsoft.AspNetCore.Components
+@using System.Linq
+
+@inject MusicaAPI MusicaAPI
+@inject ArtistaAPI ArtistaAPI
+@inject GeneroAPI GeneroAPI
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+
+    <MudText Class="mt-8" Typo="Typo.h4">Cadastro de Música</MudText>
+
+    <MudForm @ref="form" @bind-IsValid="@isFormValid" @bind-Errors="@errors">
+        <MudTextField Class="mt-4" 
+                      T="string" 
+                      Placeholder="Nome da música/canção"
+                      @bind-Value="nome"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Campo obrigatório." />
+
+        @if (isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mt-4" />
+            <MudText Class="mt-4">Carregando artistas e gêneros...</MudText>
+        }
+        
+        <MudSelect Class="mt-4" 
+                   T="ArtistaResponse" 
+                   Label="Artista"
+                   Variant="Variant.Outlined"
+                   @bind-Value="artistaSelecionado"
+                   Required="true"
+                   RequiredError="Selecione um artista."
+                   AnchorOrigin="Origin.BottomCenter"
+                   Disabled="@isLoading"
+                   HelperText="@(artistas?.Count > 0 ? $"{artistas.Count} artista(s) disponível(is)" : isLoading ? "Carregando..." : "Nenhum artista cadastrado")">
+            @if (artistas != null && artistas.Count > 0)
+            {
+                @foreach (var artista in artistas)
+                {
+                    <MudSelectItem Value="@artista">@artista.Nome</MudSelectItem>
+                }
+            }
+            else
+            {
+                <MudSelectItem T="ArtistaResponse" Disabled="true">@(isLoading ? "Carregando..." : "Nenhum artista cadastrado")</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudTextField Class="mt-4" 
+                      T="int" 
+                      Placeholder="Ano de lançamento"
+                      @bind-Value="anoLancamento"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Campo obrigatório."
+                      Min="1900"
+                      Max="@DateTime.Now.Year"
+                      HelperText="Digite o ano de lançamento da música" />
+
+        <MudSelect Class="mt-4" 
+                   T="GeneroResponse" 
+                   Label="Gêneros"
+                   Variant="Variant.Outlined"
+                   SelectedValues="@generosSelecionados"
+                   SelectedValuesChanged="@((IEnumerable<GeneroResponse> valores) => generosSelecionados = valores?.ToHashSet() ?? new HashSet<GeneroResponse>())"
+                   MultiSelection="true"
+                   AnchorOrigin="Origin.BottomCenter"
+                   Disabled="@isLoading"
+                   HelperText="@(generos?.Count > 0 ? $"{generos.Count} gênero(s) disponível(is)" : isLoading ? "Carregando..." : "Nenhum gênero cadastrado")">
+            @if (generos != null && generos.Count > 0)
+            {
+                @foreach (var genero in generos)
+                {
+                    <MudSelectItem T="GeneroResponse" Value="@genero">@genero.Nome</MudSelectItem>
+                }
+            }
+            else
+            {
+                <MudSelectItem T="GeneroResponse" Disabled="true">@(isLoading ? "Carregando..." : "Nenhum gênero cadastrado")</MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (!string.IsNullOrWhiteSpace(mensagemErro))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@mensagemErro</MudAlert>
+        }
+
+        <div class="d-flex align-center justify-space-between mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="ml-auto"
+                       @onclick="Cadastrar"
+                       Disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <text>Cadastrando...</text>
+                }
+                else
+                {
+                    <text>Cadastrar</text>
+                }
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Info"
+                       Class="ml-3"
+                       @onclick="Voltar"
+                       Disabled="@isLoading">
+                Voltar
+            </MudButton>
+        </div>
+
+    </MudForm>
+
+</MudPaper>
+
+@code {
+    private MudForm? form;
+    private bool isFormValid;
+    private string[] errors = Array.Empty<string>();
+    private string? nome;
+    private int anoLancamento;
+    private ArtistaResponse? artistaSelecionado;
+    private HashSet<GeneroResponse> generosSelecionados = new();
+    private ICollection<ArtistaResponse>? artistas = new List<ArtistaResponse>();
+    private ICollection<GeneroResponse>? generos = new List<GeneroResponse>();
+    private string? mensagemErro;
+    private bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            artistas = await ArtistaAPI.GetArtistasAsync();
+            generos = await GeneroAPI.GetGenerosAsync();
+            
+            if (artistas is null || artistas.Count == 0)
+            {
+                Snackbar.Add("Nenhum artista cadastrado. Cadastre um artista antes de cadastrar uma música.", Severity.Warning);
+            }
+            
+            if (generos is null || generos.Count == 0)
+            {
+                Snackbar.Add("Nenhum gênero cadastrado. Cadastre gêneros antes de cadastrar uma música.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao carregar dados: {ex.Message}";
+            Snackbar.Add("Erro ao carregar dados. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cadastrar()
+    {
+        mensagemErro = null;
+
+        if (form?.IsValid != true)
+        {
+            Snackbar.Add("Por favor, preencha todos os campos obrigatórios.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            Snackbar.Add("Nome da música é obrigatório.", Severity.Error);
+            return;
+        }
+
+        if (artistaSelecionado is null)
+        {
+            Snackbar.Add("Selecione um artista.", Severity.Error);
+            return;
+        }
+
+        if (anoLancamento < 1900 || anoLancamento > DateTime.Now.Year)
+        {
+            Snackbar.Add($"Ano de lançamento deve estar entre 1900 e {DateTime.Now.Year}.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            
+            ICollection<GeneroRequest>? generosRequest = null;
+            if (generosSelecionados is not null && generosSelecionados.Count > 0)
+            {
+                generosRequest = generosSelecionados.Select(g => new GeneroRequest(g.Nome, g.Descricao)).ToList();
+            }
+            var request = new MusicaRequest(nome.Trim(), artistaSelecionado.Id, anoLancamento, generosRequest ?? new List<GeneroRequest>());
+            
+            await MusicaAPI.AddMusicaAsync(request);
+            Snackbar.Add("Música cadastrada com sucesso!", Severity.Success);
+            await Task.Delay(500);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao cadastrar música: {ex.Message}";
+            Snackbar.Add("Erro ao cadastrar música. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Voltar()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

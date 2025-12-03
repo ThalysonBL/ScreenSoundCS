@@ -1,0 +1,178 @@
+﻿@page "/CadastrarArtista"
+@using ScreenSound.Web.Requests
+<h3>CadastrarArtista</h3>
+
+@inject ArtistaAPI ArtistaAPI
+@inject NavigationManager navigationManager
+@inject ISnackbar Snackbar
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+
+    <MudText Class="mt-8" Typo="Typo.h4">Cadastro do Artista</MudText>
+
+    <MudForm @ref="form" @bind-IsValid="@isFormValid" @bind-Errors="@errors">
+        <MudTextField Class="mt-4" 
+                      T="string" 
+                      Placeholder="Nome do Artista"
+                      Variant="Variant.Outlined"
+                      @bind-Value="nome"
+                      Required="true"
+                      RequiredError="Campo obrigatório." />
+
+        <MudTextField Class="mt-4" 
+                      T="string" 
+                      Placeholder="Biografia do artista"
+                      Variant="Variant.Outlined"
+                      @bind-Value="biografia"
+                      Lines="4"
+                      Required="true"
+                      RequiredError="Campo obrigatório." />
+                            
+        <MudStack Class="mt-4" Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            @if (!string.IsNullOrWhiteSpace(fileImage))
+            {
+                <MudImage Src="@fileImage" 
+                          Style="max-width: 200px; max-height: 200px; border-radius: 8px;" />
+            }
+            else
+            {
+                <MudPaper Elevation="2" 
+                          Style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; background-color: #424242;">
+                    <MudText Typo="Typo.body2" Style="color: #999;">Sem foto</MudText>
+                </MudPaper>
+            }
+        </MudStack>
+
+        <InputFile OnChange="UploadFile" 
+                   accept=".jpeg,.jpg" 
+                   class="d-none" 
+                   id="fileInput" />
+        <MudButton HtmlTag="label"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PhotoCamera"
+                   for="fileInput"
+                   Class="mt-4"
+                   Disabled="@isLoading">
+            @if (string.IsNullOrWhiteSpace(fileImage))
+            {
+                <text>Adicionar Foto de Perfil</text>
+            }
+            else
+            {
+                <text>Alterar Foto de Perfil</text>
+            }
+        </MudButton>
+
+        @if (!string.IsNullOrWhiteSpace(mensagemErro))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@mensagemErro</MudAlert>
+        }
+
+        <div class="d-flex align-center justify-space-between mt-4">
+            <MudButton Variant="Variant.Filled"
+                       @onclick="Cadastrar"
+                       Color="Color.Primary"
+                       Class="ml-auto"
+                       Disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <text>Cadastrando...</text>
+                }
+                else
+                {
+                    <text>Cadastrar</text>
+                }
+            </MudButton>
+        </div>
+    </MudForm>
+</MudPaper>
+
+@code {
+    private MudForm? form;
+    private bool isFormValid;
+    private string[] errors = Array.Empty<string>();
+    private string? nome;
+    private string? biografia;
+    private string? fileImage;
+    private string? fotoPerfil;
+    private string? mensagemErro;
+    private bool isLoading = false;
+
+    private async Task Cadastrar()
+    {
+        mensagemErro = null;
+        
+        if (form?.IsValid != true)
+        {
+            Snackbar.Add("Por favor, preencha todos os campos obrigatórios.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(biografia))
+        {
+            Snackbar.Add("Nome e biografia são obrigatórios.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            var request = new ArtistaRequest(nome.Trim(), biografia.Trim(), fotoPerfil);
+            await ArtistaAPI.AddArtistaAsync(request);
+            Snackbar.Add("Artista cadastrado com sucesso!", Severity.Success);
+            await Task.Delay(500);
+            navigationManager.NavigateTo("/Artistas");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao cadastrar artista: {ex.Message}";
+            Snackbar.Add("Erro ao cadastrar artista. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        mensagemErro = null;
+        var file = e.File;
+        
+        if (file == null)
+            return;
+
+        long maxFileSize = 1024 * 1024 * 15; // 15 MB
+
+        if (file.Size > maxFileSize)
+        {
+            mensagemErro = "Arquivo muito grande. O tamanho máximo é 15 MB.";
+            Snackbar.Add("Arquivo muito grande. O tamanho máximo é 15 MB.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            var format = "image/jpeg";
+            var resizedImage = await file.RequestImageFileAsync(format, 200, 200);
+
+            using var fileStream = resizedImage.OpenReadStream();
+            using var memoryStream = new MemoryStream();
+            await fileStream.CopyToAsync(memoryStream);
+
+            var imageUpload = Convert.ToBase64String(memoryStream.ToArray());
+            fileImage = $"data:{format};base64,{imageUpload}";
+            fotoPerfil = imageUpload;
+            
+            Snackbar.Add("Foto carregada com sucesso!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao processar a imagem: {ex.Message}";
+            Snackbar.Add("Erro ao processar a imagem. Tente novamente.", Severity.Error);
+            fileImage = null;
+            fotoPerfil = null;
+        }
+    }
+}

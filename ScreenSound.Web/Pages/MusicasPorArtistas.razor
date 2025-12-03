@@ -1,0 +1,140 @@
+﻿@page "/MusicasPorArtista"
+@using ScreenSound.Web.Response
+@using ScreenSound.Web.Services
+
+@inject MusicaAPI MusicaAPI
+@inject ArtistaAPI ArtistaAPI
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+    <MudText Class="mt-8" Typo="Typo.h4">Músicas por Artista</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-4" />
+        <MudText Class="mt-4">Carregando artistas...</MudText>
+    }
+    else
+    {
+        <MudSelect Class="mt-4" 
+                   T="ArtistaResponse" 
+                   Label="Selecione um Artista"
+                   Variant="Variant.Outlined"
+                   Value="@artistaSelecionado"
+                   ValueChanged="@((ArtistaResponse? artista) => OnArtistaChanged(artista))"
+                   AnchorOrigin="Origin.BottomCenter"
+                   HelperText="@(artistas?.Count > 0 ? $"{artistas.Count} artista(s) disponível(is)" : "Nenhum artista cadastrado")">
+            @if (artistas is not null && artistas.Count > 0)
+            {
+                @foreach (var artista in artistas)
+                {
+                    <MudSelectItem Value="@artista">@artista.Nome</MudSelectItem>
+                }
+            }
+            else
+            {
+                <MudSelectItem T="ArtistaResponse" Disabled="true">Nenhum artista cadastrado</MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (artistaSelecionado is not null)
+        {
+            @if (isLoadingMusicas)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mt-4" />
+                <MudText Class="mt-4">Carregando músicas...</MudText>
+            }
+            else if (musicas is not null && musicas.Count > 0)
+            {
+                <MudText Class="mt-6 mb-4" Typo="Typo.h6">@musicas.Count música(s) encontrada(s) para @artistaSelecionado.Nome</MudText>
+                <MudGrid>
+                    @foreach (var musica in musicas)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <CardMusica Musica="musica" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else if (!isLoadingMusicas)
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-4">
+                    Nenhuma música encontrada para o artista @artistaSelecionado.Nome
+                </MudAlert>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                Selecione um artista para visualizar suas músicas
+            </MudAlert>
+        }
+    }
+
+    @if (!string.IsNullOrWhiteSpace(mensagemErro))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">@mensagemErro</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private ICollection<ArtistaResponse>? artistas;
+    private ArtistaResponse? artistaSelecionado;
+    private ICollection<MusicaResponse>? musicas;
+    private string? mensagemErro;
+    private bool isLoading = false;
+    private bool isLoadingMusicas = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            artistas = await ArtistaAPI.GetArtistasAsync();
+            
+            if (artistas is null || artistas.Count == 0)
+            {
+                Snackbar.Add("Nenhum artista cadastrado.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao carregar dados: {ex.Message}";
+            Snackbar.Add("Erro ao carregar dados. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnArtistaChanged(ArtistaResponse? artista)
+    {
+        artistaSelecionado = artista;
+        musicas = null;
+        
+        if (artista is not null)
+        {
+            try
+            {
+                isLoadingMusicas = true;
+                musicas = await MusicaAPI.GetMusicasPorArtistaAsync(artista.Id);
+                
+                if (musicas is null || musicas.Count == 0)
+                {
+                    Snackbar.Add($"Nenhuma música encontrada para {artista.Nome}", Severity.Info);
+                }
+            }
+            catch (Exception ex)
+            {
+                mensagemErro = $"Erro ao carregar músicas: {ex.Message}";
+                Snackbar.Add("Erro ao carregar músicas. Tente novamente.", Severity.Error);
+            }
+            finally
+            {
+                isLoadingMusicas = false;
+            }
+        }
+    }
+}

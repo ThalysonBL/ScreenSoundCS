@@ -1,0 +1,286 @@
+﻿@page "/EditarMusica/{IdMusica}"
+@using ScreenSound.Web.Requests
+@using ScreenSound.Web.Response
+@using Microsoft.AspNetCore.Components
+@using System.Linq
+
+@inject MusicaAPI MusicaAPI
+@inject ArtistaAPI ArtistaAPI
+@inject GeneroAPI GeneroAPI
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+
+    <MudText Class="mt-8" Typo="Typo.h4">Edição de Música</MudText>
+
+    @if (isLoading && musica is null)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-4" />
+        <MudText Class="mt-4">Carregando dados da música...</MudText>
+    }
+    else if (musica is null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">Música não encontrada.</MudAlert>
+    }
+    else
+    {
+        <MudForm @ref="form" @bind-IsValid="@isFormValid" @bind-Errors="@errors">
+            <MudTextField Class="mt-4" 
+                          T="string" 
+                          Placeholder="Nome da música/canção"
+                          @bind-Value="nome"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Campo obrigatório." />
+
+            <MudSelect Class="mt-4" 
+                       T="ArtistaResponse" 
+                       Label="Artista"
+                       Variant="Variant.Outlined"
+                       @bind-Value="artistaSelecionado"
+                       Required="true"
+                       RequiredError="Selecione um artista."
+                       AnchorOrigin="Origin.BottomCenter"
+                       Disabled="@isLoading">
+                @if (artistas is not null)
+                {
+                    @foreach (var artista in artistas)
+                    {
+                        <MudSelectItem Value="@artista">@artista.Nome</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            <MudTextField Class="mt-4" 
+                          T="int" 
+                          Placeholder="Ano de lançamento"
+                          @bind-Value="anoLancamento"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Campo obrigatório."
+                          Min="1900"
+                          Max="@DateTime.Now.Year"
+                          HelperText="Digite o ano de lançamento da música" />
+
+            <MudSelect Class="mt-4" 
+                       T="GeneroResponse" 
+                       Label="Gêneros"
+                       Variant="Variant.Outlined"
+                       SelectedValues="@generosSelecionados"
+                       SelectedValuesChanged="@((IEnumerable<GeneroResponse> valores) => generosSelecionados = valores.ToHashSet())"
+                       MultiSelection="true"
+                       AnchorOrigin="Origin.BottomCenter"
+                       Disabled="@isLoading">
+                @if (generos is not null)
+                {
+                    @foreach (var genero in generos)
+                    {
+                        <MudSelectItem T="GeneroResponse" Value="@genero">@genero.Nome</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+
+            @if (!string.IsNullOrWhiteSpace(mensagemErro))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@mensagemErro</MudAlert>
+            }
+
+            <div class="d-flex align-center justify-space-between mt-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Class="ml-auto"
+                           @onclick="Editar"
+                           Disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <text>Salvando...</text>
+                    }
+                    else
+                    {
+                        <text>Salvar</text>
+                    }
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Error"
+                           Class="ml-3"
+                           @onclick="Deletar"
+                           Disabled="@isLoading">
+                    Deletar
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Info"
+                           Class="ml-3"
+                           @onclick="Voltar"
+                           Disabled="@isLoading">
+                    Voltar
+                </MudButton>
+            </div>
+
+        </MudForm>
+    }
+
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? IdMusica { get; set; }
+
+    private MudForm? form;
+    private bool isFormValid;
+    private string[] errors = Array.Empty<string>();
+    private string? nome;
+    private int anoLancamento;
+    private ArtistaResponse? artistaSelecionado;
+    private HashSet<GeneroResponse> generosSelecionados = new();
+    private ICollection<ArtistaResponse>? artistas;
+    private ICollection<GeneroResponse>? generos;
+    private MusicaCompletaResponse? musica;
+    private string? mensagemErro;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            if (int.TryParse(IdMusica, out int id))
+            {
+                musica = await MusicaAPI.GetMusicaPorIdAsync(id);
+            }
+            else
+            {
+                mensagemErro = "ID da música inválido.";
+                return;
+            }
+
+            if (musica is null)
+            {
+                mensagemErro = "Música não encontrada.";
+                return;
+            }
+
+            artistas = await ArtistaAPI.GetArtistasAsync();
+            generos = await GeneroAPI.GetGenerosAsync();
+
+            // Preencher os campos com os dados da música
+            nome = musica.Nome;
+            anoLancamento = musica.AnoLancamento ?? DateTime.Now.Year;
+            
+            // Encontrar o artista selecionado
+            artistaSelecionado = artistas?.FirstOrDefault(a => a.Id == musica.ArtistaId);
+            
+            // Carregar gêneros selecionados
+            if (musica.Generos is not null && generos is not null)
+            {
+                generosSelecionados = new HashSet<GeneroResponse>(
+                    generos.Where(g => musica.Generos!.Any(mg => mg.Id == g.Id))
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao carregar dados: {ex.Message}";
+            Snackbar.Add("Erro ao carregar dados. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Editar()
+    {
+        mensagemErro = null;
+
+        if (form?.IsValid != true)
+        {
+            Snackbar.Add("Por favor, preencha todos os campos obrigatórios.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            Snackbar.Add("Nome da música é obrigatório.", Severity.Error);
+            return;
+        }
+
+        if (artistaSelecionado is null)
+        {
+            Snackbar.Add("Selecione um artista.", Severity.Error);
+            return;
+        }
+
+        if (anoLancamento < 1900 || anoLancamento > DateTime.Now.Year)
+        {
+            Snackbar.Add($"Ano de lançamento deve estar entre 1900 e {DateTime.Now.Year}.", Severity.Error);
+            return;
+        }
+
+        if (musica is null)
+        {
+            Snackbar.Add("Música não encontrada.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            
+            ICollection<GeneroRequest>? generosRequest = null;
+            if (generosSelecionados is not null && generosSelecionados.Count > 0)
+            {
+                generosRequest = generosSelecionados.Select(g => new GeneroRequest(g.Nome, g.Descricao)).ToList();
+            }
+            
+            var request = new MusicaRequestEdit(musica.Id, nome.Trim(), artistaSelecionado.Id, anoLancamento, generosRequest);
+            
+            await MusicaAPI.UpdateMusicaAsync(request);
+            Snackbar.Add("Música atualizada com sucesso!", Severity.Success);
+            await Task.Delay(500);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao atualizar música: {ex.Message}";
+            Snackbar.Add("Erro ao atualizar música. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Deletar()
+    {
+        if (musica is null)
+        {
+            Snackbar.Add("Música não encontrada.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            await MusicaAPI.DeleteMusicaAsync(musica.Id);
+            Snackbar.Add("Música deletada com sucesso!", Severity.Success);
+            await Task.Delay(500);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao deletar música: {ex.Message}";
+            Snackbar.Add("Erro ao deletar música. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Voltar()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

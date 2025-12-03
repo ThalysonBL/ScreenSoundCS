@@ -1,0 +1,140 @@
+﻿@page "/MusicasPorGenero"
+@using ScreenSound.Web.Response
+@using ScreenSound.Web.Services
+
+@inject MusicaAPI MusicaAPI
+@inject GeneroAPI GeneroAPI
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+    <MudText Class="mt-8" Typo="Typo.h4">Músicas por Gênero</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-4" />
+        <MudText Class="mt-4">Carregando gêneros...</MudText>
+    }
+    else
+    {
+        <MudSelect Class="mt-4" 
+                   T="GeneroResponse" 
+                   Label="Selecione um Gênero"
+                   Variant="Variant.Outlined"
+                   Value="@generoSelecionado"
+                   ValueChanged="@((GeneroResponse? genero) => OnGeneroChanged(genero))"
+                   AnchorOrigin="Origin.BottomCenter"
+                   HelperText="@(generos?.Count > 0 ? $"{generos.Count} gênero(s) disponível(is)" : "Nenhum gênero cadastrado")">
+            @if (generos is not null && generos.Count > 0)
+            {
+                @foreach (var genero in generos)
+                {
+                    <MudSelectItem Value="@genero">@genero.Nome</MudSelectItem>
+                }
+            }
+            else
+            {
+                <MudSelectItem T="GeneroResponse" Disabled="true">Nenhum gênero cadastrado</MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (generoSelecionado is not null)
+        {
+            @if (isLoadingMusicas)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mt-4" />
+                <MudText Class="mt-4">Carregando músicas...</MudText>
+            }
+            else if (musicas is not null && musicas.Count > 0)
+            {
+                <MudText Class="mt-6 mb-4" Typo="Typo.h6">@musicas.Count música(s) encontrada(s) para o gênero @generoSelecionado.Nome</MudText>
+                <MudGrid>
+                    @foreach (var musica in musicas)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <CardMusica Musica="musica" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else if (!isLoadingMusicas)
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-4">
+                    Nenhuma música encontrada para o gênero @generoSelecionado.Nome
+                </MudAlert>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                Selecione um gênero para visualizar suas músicas
+            </MudAlert>
+        }
+    }
+
+    @if (!string.IsNullOrWhiteSpace(mensagemErro))
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">@mensagemErro</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private ICollection<GeneroResponse>? generos;
+    private GeneroResponse? generoSelecionado;
+    private ICollection<MusicaResponse>? musicas;
+    private string? mensagemErro;
+    private bool isLoading = false;
+    private bool isLoadingMusicas = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            generos = await GeneroAPI.GetGenerosAsync();
+            
+            if (generos is null || generos.Count == 0)
+            {
+                Snackbar.Add("Nenhum gênero cadastrado.", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro ao carregar dados: {ex.Message}";
+            Snackbar.Add("Erro ao carregar dados. Tente novamente.", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnGeneroChanged(GeneroResponse? genero)
+    {
+        generoSelecionado = genero;
+        musicas = null;
+        
+        if (genero is not null)
+        {
+            try
+            {
+                isLoadingMusicas = true;
+                musicas = await MusicaAPI.GetMusicasPorGeneroAsync(genero.Id);
+                
+                if (musicas is null || musicas.Count == 0)
+                {
+                    Snackbar.Add($"Nenhuma música encontrada para o gênero {genero.Nome}", Severity.Info);
+                }
+            }
+            catch (Exception ex)
+            {
+                mensagemErro = $"Erro ao carregar músicas: {ex.Message}";
+                Snackbar.Add("Erro ao carregar músicas. Tente novamente.", Severity.Error);
+            }
+            finally
+            {
+                isLoadingMusicas = false;
+            }
+        }
+    }
+}
